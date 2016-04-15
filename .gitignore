@@ -8,6 +8,7 @@ _*
 *.gif
 log*.txt
 sshgame
+id_rsa
 
 # Folders
 _obj
