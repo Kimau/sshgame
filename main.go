@@ -120,7 +120,20 @@ func testSSHServer() {
 
 		term := terminal.NewTerminal(channel, "> ")
 
-		fmt.Fprintf(term, "%s %s [%d,%d] %s%s                  Login                 %s \n\r", ansi.CLEAR_SCREEN, ansi.Pos(chanWidth-10, chanHeight), chanWidth, chanHeight, ansi.GOTO_TL, ansi.Set(ansi.FgBlack, ansi.BgYellow), ansi.Set())
+		fmt.Fprintf(term, "%s %s [%d,%d] %s%s%s                  Login                 %s \n\r", ansi.CLEAR_SCREEN, ansi.Pos(chanWidth-10, chanHeight), chanWidth, chanHeight, ansi.GOTO_TL, ansi.CLEAR_LINE, ansi.Set(ansi.FgBlack, ansi.BgYellow), ansi.Set())
+		fmt.Fprint(term, ansi.Set(ansi.FgRed, ansi.BgRed)+"                                                                                      \n\r"+
+			" "+ansi.Set(ansi.FgRed, ansi.BgBlack)+"                                                                                    "+ansi.Set(ansi.BgRed, ansi.BgRed)+" \n\r"+
+			" "+ansi.Set(ansi.FgHiRed, ansi.BgBlack)+"  ██"+ansi.Set(ansi.FgRed, ansi.BgBlack)+"▓"+ansi.Set(ansi.FgHiRed, ansi.BgBlack)+"     █    ██ "+ansi.Set(ansi.FgRed, ansi.BgBlack)+"▓"+ansi.Set(ansi.FgHiRed, ansi.BgBlack)+"█████▄  █    ██  ███▄ ▄███"+ansi.Set(ansi.FgRed, ansi.BgBlack)+"▓   ▓"+ansi.Set(ansi.FgHiRed, ansi.BgBlack)+"█████▄  ▄▄▄       ██▀███  "+ansi.Set(ansi.FgRed, ansi.BgBlack)+"▓"+ansi.Set(ansi.FgHiRed, ansi.BgBlack)+"█████  "+ansi.Set(ansi.BgRed, ansi.BgRed)+" \n\r"+
+			" "+ansi.Set(ansi.FgRed, ansi.BgBlack)+" ▓"+ansi.Set(ansi.FgHiRed, ansi.BgBlack)+"██"+ansi.Set(ansi.FgRed, ansi.BgBlack)+"▒"+ansi.Set(ansi.FgHiRed, ansi.BgBlack)+"     ██  "+ansi.Set(ansi.FgRed, ansi.BgBlack)+"▓"+ansi.Set(ansi.FgHiRed, ansi.BgBlack)+"██"+ansi.Set(ansi.FgRed, ansi.BgBlack)+"▒▒"+ansi.Set(ansi.FgHiRed, ansi.BgBlack)+"██▀ ██▌ ██  "+ansi.Set(ansi.FgRed, ansi.BgBlack)+"▓"+ansi.Set(ansi.FgHiRed, ansi.BgBlack)+"██"+ansi.Set(ansi.FgRed, ansi.BgBlack)+"▒▓"+ansi.Set(ansi.FgHiRed, ansi.BgBlack)+"██"+ansi.Set(ansi.FgRed, ansi.BgBlack)+"▒"+ansi.Set(ansi.FgHiRed, ansi.BgBlack)+"▀█▀ ██"+ansi.Set(ansi.FgRed, ansi.BgBlack)+"▒   ▒"+ansi.Set(ansi.FgHiRed, ansi.BgBlack)+"██▀ ██▌"+ansi.Set(ansi.FgRed, ansi.BgBlack)+"▒"+ansi.Set(ansi.FgHiRed, ansi.BgBlack)+"████▄    "+ansi.Set(ansi.FgRed, ansi.BgBlack)+"▓"+ansi.Set(ansi.FgHiRed, ansi.BgBlack)+"██ "+ansi.Set(ansi.FgRed, ansi.BgBlack)+"▒"+ansi.Set(ansi.FgHiRed, ansi.BgBlack)+" ██"+ansi.Set(ansi.FgRed, ansi.BgBlack)+"▒▓"+ansi.Set(ansi.FgHiRed, ansi.BgBlack)+"█   ▀  "+ansi.Set(ansi.BgRed, ansi.BgRed)+" \n\r"+
+			" "+ansi.Set(ansi.FgRed, ansi.BgBlack)+" ▒"+ansi.Set(ansi.FgHiRed, ansi.BgBlack)+"██"+ansi.Set(ansi.FgRed, ansi.BgBlack)+"░    ▓"+ansi.Set(ansi.FgHiRed, ansi.BgBlack)+"██  "+ansi.Set(ansi.FgRed, ansi.BgBlack)+"▒"+ansi.Set(ansi.FgHiRed, ansi.BgBlack)+"██"+ansi.Set(ansi.FgRed, ansi.BgBlack)+"░░"+ansi.Set(ansi.FgHiRed, ansi.BgBlack)+"██   █▌"+ansi.Set(ansi.FgRed, ansi.BgBlack)+"▓"+ansi.Set(ansi.FgHiRed, ansi.BgBlack)+"██  "+ansi.Set(ansi.FgRed, ansi.BgBlack)+"▒"+ansi.Set(ansi.FgHiRed, ansi.BgBlack)+"██"+ansi.Set(ansi.FgRed, ansi.BgBlack)+"░▓"+ansi.Set(ansi.FgHiRed, ansi.BgBlack)+"██    "+ansi.Set(ansi.FgRed, ansi.BgBlack)+"▓"+ansi.Set(ansi.FgHiRed, ansi.BgBlack)+"██"+ansi.Set(ansi.FgRed, ansi.BgBlack)+"░   ░"+ansi.Set(ansi.FgHiRed, ansi.BgBlack)+"██   █▌"+ansi.Set(ansi.FgRed, ansi.BgBlack)+"▒"+ansi.Set(ansi.FgHiRed, ansi.BgBlack)+"██  ▀█▄  "+ansi.Set(ansi.FgRed, ansi.BgBlack)+"▓"+ansi.Set(ansi.FgHiRed, ansi.BgBlack)+"██ "+ansi.Set(ansi.FgRed, ansi.BgBlack)+"░"+ansi.Set(ansi.FgHiRed, ansi.BgBlack)+"▄█ "+ansi.Set(ansi.FgRed, ansi.BgBlack)+"▒▒"+ansi.Set(ansi.FgHiRed, ansi.BgBlack)+"███    "+ansi.Set(ansi.BgRed, ansi.BgRed)+" \n\r"+
+			" "+ansi.Set(ansi.FgRed, ansi.BgBlack)+" ▒"+ansi.Set(ansi.FgHiRed, ansi.BgBlack)+"██"+ansi.Set(ansi.FgRed, ansi.BgBlack)+"░    ▓▓"+ansi.Set(ansi.FgHiRed, ansi.BgBlack)+"█  "+ansi.Set(ansi.FgRed, ansi.BgBlack)+"░"+ansi.Set(ansi.FgHiRed, ansi.BgBlack)+"██"+ansi.Set(ansi.FgRed, ansi.BgBlack)+"░░▓"+ansi.Set(ansi.FgHiRed, ansi.BgBlack)+"█▄   ▌"+ansi.Set(ansi.FgRed, ansi.BgBlack)+"▓▓"+ansi.Set(ansi.FgHiRed, ansi.BgBlack)+"█  "+ansi.Set(ansi.FgRed, ansi.BgBlack)+"░"+ansi.Set(ansi.FgHiRed, ansi.BgBlack)+"██"+ansi.Set(ansi.FgRed, ansi.BgBlack)+"░▒"+ansi.Set(ansi.FgHiRed, ansi.BgBlack)+"██    "+ansi.Set(ansi.FgRed, ansi.BgBlack)+"▒"+ansi.Set(ansi.FgHiRed, ansi.BgBlack)+"██    "+ansi.Set(ansi.FgRed, ansi.BgBlack)+"░▓"+ansi.Set(ansi.FgHiRed, ansi.BgBlack)+"█▄   ▌"+ansi.Set(ansi.FgRed, ansi.BgBlack)+"░"+ansi.Set(ansi.FgHiRed, ansi.BgBlack)+"██▄▄▄▄██ "+ansi.Set(ansi.FgRed, ansi.BgBlack)+"▒"+ansi.Set(ansi.FgHiRed, ansi.BgBlack)+"██▀▀█▄  "+ansi.Set(ansi.FgRed, ansi.BgBlack)+"▒▓"+ansi.Set(ansi.FgHiRed, ansi.BgBlack)+"█  ▄  "+ansi.Set(ansi.BgRed, ansi.BgRed)+" \n\r"+
+			" "+ansi.Set(ansi.FgRed, ansi.BgBlack)+" ░"+ansi.Set(ansi.FgHiRed, ansi.BgBlack)+"██████"+ansi.Set(ansi.FgRed, ansi.BgBlack)+"▒▒▒"+ansi.Set(ansi.FgHiRed, ansi.BgBlack)+"█████"+ansi.Set(ansi.FgRed, ansi.BgBlack)+"▓ ░▒"+ansi.Set(ansi.FgHiRed, ansi.BgBlack)+"████"+ansi.Set(ansi.FgRed, ansi.BgBlack)+"▓ ▒▒"+ansi.Set(ansi.FgHiRed, ansi.BgBlack)+"█████"+ansi.Set(ansi.FgRed, ansi.BgBlack)+"▓ ▒"+ansi.Set(ansi.FgHiRed, ansi.BgBlack)+"██"+ansi.Set(ansi.FgRed, ansi.BgBlack)+"▒   ░"+ansi.Set(ansi.FgHiRed, ansi.BgBlack)+"██"+ansi.Set(ansi.FgRed, ansi.BgBlack)+"▒   ░▒"+ansi.Set(ansi.FgHiRed, ansi.BgBlack)+"████"+ansi.Set(ansi.FgRed, ansi.BgBlack)+"▓  ▓"+ansi.Set(ansi.FgHiRed, ansi.BgBlack)+"█   "+ansi.Set(ansi.FgRed, ansi.BgBlack)+"▓"+ansi.Set(ansi.FgHiRed, ansi.BgBlack)+"██"+ansi.Set(ansi.FgRed, ansi.BgBlack)+"▒░"+ansi.Set(ansi.FgHiRed, ansi.BgBlack)+"██"+ansi.Set(ansi.FgRed, ansi.BgBlack)+"▓ ▒"+ansi.Set(ansi.FgHiRed, ansi.BgBlack)+"██"+ansi.Set(ansi.FgRed, ansi.BgBlack)+"▒░▒"+ansi.Set(ansi.FgHiRed, ansi.BgBlack)+"████"+ansi.Set(ansi.FgRed, ansi.BgBlack)+"▒ "+ansi.Set(ansi.BgRed, ansi.BgRed)+" \n\r"+
+			" "+ansi.Set(ansi.FgRed, ansi.BgBlack)+" ░ ▒░▓  ░░▒▓▒ ▒ ▒  ▒▒▓  ▒ ░▒▓▒ ▒ ▒ ░ ▒░   ░  ░    ▒▒▓  ▒  ▒▒   ▓▒"+ansi.Set(ansi.FgHiRed, ansi.BgBlack)+"█"+ansi.Set(ansi.FgRed, ansi.BgBlack)+"░░ ▒▓ ░▒▓░░░ ▒░ ░ "+ansi.Set(ansi.BgRed, ansi.BgRed)+" \n\r"+
+			" "+ansi.Set(ansi.FgRed, ansi.BgBlack)+" ░ ░ ▒  ░░░▒░ ░ ░  ░ ▒  ▒ ░░▒░ ░ ░ ░  ░      ░    ░ ▒  ▒   ▒   ▒▒ ░  ░▒ ░ ▒░ ░ ░  ░ "+ansi.Set(ansi.BgRed, ansi.BgRed)+" \n\r"+
+			" "+ansi.Set(ansi.FgRed, ansi.BgBlack)+"   ░ ░    ░░░ ░ ░  ░ ░  ░  ░░░ ░ ░ ░      ░       ░ ░  ░   ░   ▒     ░░   ░    ░    "+ansi.Set(ansi.BgRed, ansi.BgRed)+" \n\r"+
+			" "+ansi.Set(ansi.FgRed, ansi.BgBlack)+"     ░  ░   ░        ░       ░            ░         ░          ░  ░   ░        ░  ░ "+ansi.Set(ansi.BgRed, ansi.BgRed)+" \n\r"+
+			" "+ansi.Set(ansi.FgRed, ansi.BgBlack)+"                                                                                    "+ansi.Set(ansi.BgRed, ansi.BgRed)+" \n\r"+
+			"                                                                                      \n\r"+ansi.Set())
 
 		go func() {
 			defer channel.Close()
@@ -138,24 +151,13 @@ func testSSHServer() {
 					fmt.Fprintf(term, "%s%s", ansi.CLEAR_SCREEN, ansi.GOTO_TL)
 
 				case "border":
-					fmt.Fprintf(term, "[")
-					for x := 3; x < chanWidth; x += 1 {
-						fmt.Fprintf(term, "=")
-					}
-					fmt.Fprintf(term, "]\n\r")
-					for y := 3; y < chanHeight; y += 1 {
-						fmt.Fprintf(term, "[")
-						for x := 3; x < chanWidth; x += 1 {
-							fmt.Fprintf(term, ".")
-						}
-						fmt.Fprintf(term, "]\n\r")
+					fmt.Fprint(term, ansi.CLEAR_SCREEN+ansi.Set(ansi.FgBlack, ansi.BgWhite)+ansi.GOTO_TL+ansi.CLEAR_LINE+ansi.Pos(chanWidth, chanHeight-1)+ansi.CLEAR_LINE)
+
+					for y := 1; y < chanHeight; y += 1 {
+						fmt.Fprintf(term, ansi.Pos(chanWidth, y)+"  ")
 					}
 
-					fmt.Fprintf(term, "[")
-					for x := 3; x < chanWidth; x += 1 {
-						fmt.Fprintf(term, "=")
-					}
-					fmt.Fprintf(term, "]\n\r")
+					fmt.Fprint(term, ansi.Set()+ansi.Pos(1, chanHeight))
 
 				default:
 					fmt.Fprintf(term, "Uknown command: [%s]\n\r", line)

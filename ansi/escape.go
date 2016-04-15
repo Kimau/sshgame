@@ -75,6 +75,11 @@ func Right(x int) string  { return fmt.Sprintf("\x1b[%dC", x) }
 func Left(x int) string   { return fmt.Sprintf("\x1b[%dD", x) }
 func Pos(x, y int) string { return fmt.Sprintf("\x1b[%d;%dH", y, x) }
 
+const CUP = "\x1b[1A"
+const CDOWN = "\x1b[1B"
+const CRIGHT = "\x1b[1C"
+const CLEFT = "\x1b[1D"
+
 const GOTO_TL = "\x1b[1;1H"
 const CLEAR_RIGHT = "\x1b[0K"
 const CLEAR_LEFT = "\x1b[1K"
