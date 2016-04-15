@@ -8,6 +8,8 @@ import (
 
 	"golang.org/x/crypto/ssh"
 	"golang.org/x/crypto/ssh/terminal"
+
+	"./ansi"
 )
 
 func main() {
@@ -118,7 +120,7 @@ func testSSHServer() {
 
 		term := terminal.NewTerminal(channel, "> ")
 
-		fmt.Fprintf(term, "%s Login [%d,%d] %s \n\r", term.Escape.Red, chanWidth, chanHeight, term.Escape.White)
+		fmt.Fprintf(term, "%s %s [%d,%d] %s%s                  Login                 %s \n\r", ansi.CLEAR_SCREEN, ansi.Pos(chanWidth-10, chanHeight), chanWidth, chanHeight, ansi.GOTO_TL, ansi.Set(ansi.FgBlack, ansi.BgYellow), ansi.Set())
 
 		go func() {
 			defer channel.Close()
@@ -129,6 +131,12 @@ func testSSHServer() {
 				}
 
 				switch line {
+				case "br":
+					fmt.Fprintf(term, "%s%sX", ansi.CLEAR_SCREEN, ansi.Pos(chanWidth, chanHeight))
+
+				case "clear":
+					fmt.Fprintf(term, "%s%s", ansi.CLEAR_SCREEN, ansi.GOTO_TL)
+
 				case "border":
 					fmt.Fprintf(term, "[")
 					for x := 3; x < chanWidth; x += 1 {
