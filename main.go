@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"io/ioutil"
 	"net"
+	"encoding/binary"
 
 	"golang.org/x/crypto/ssh"
 	"golang.org/x/crypto/ssh/terminal"
@@ -11,6 +12,13 @@ import (
 
 func main() {
 	testSSHServer()
+}
+
+// parseDims extracts terminal dimensions (width x height) from the provided buffer.
+func parseDims(b []byte) (int, int) {
+	w := int(binary.BigEndian.Uint32(b))
+	h := int(binary.BigEndian.Uint32(b[4:]))
+	return w, h
 }
 
 func testSSHServer() {
@@ -74,27 +82,43 @@ func testSSHServer() {
 			panic("could not accept channel.")
 		}
 
+		 chanWidth, chanHeight  := 80, 100
+
 		// Sessions have out-of-band requests such as "shell",
 		// "pty-req" and "env".  Here we handle only the
 		// "shell" request.
 		go func(in <-chan *ssh.Request) {
 			for req := range in {
-				ok := false
+				fmt.Println("Request:",req)
+
 				switch req.Type {
 				case "shell":
-					ok = true
 					if len(req.Payload) > 0 {
-						// We don't accept any
-						// commands, only the
-						// default shell.
-						ok = false
+						// We don't accept any commands, only the default shell.
+						req.Reply(false, nil)
+						continue
 					}
-				}
-				req.Reply(ok, nil)
+
+					req.Reply(true, nil)
+
+					case "pty-req":
+				termLen := req.Payload[3]
+				chanWidth, chanHeight = parseDims(req.Payload[termLen+4:])
+				req.Reply(true, nil)
+			case "window-change":
+				chanWidth, chanHeight = parseDims(req.Payload)
+				req.Reply(true, nil)
+
+default:
+	req.Reply(false, nil)
+}
+				
 			}
 		}(requests)
 
 		term := terminal.NewTerminal(channel, "> ")
+
+		fmt.Fprintf(term, "%s Login [%d,%d] %s \n\r", term.Escape.Red,chanWidth,chanHeight, term.Escape.White)
 
 		go func() {
 			defer channel.Close()
@@ -103,7 +127,32 @@ func testSSHServer() {
 				if err != nil {
 					break
 				}
-				fmt.Println(line)
+
+				switch line {
+				case "border":
+					fmt.Fprintf(term,"[")
+					for x := 3; x < chanWidth; x += 1 {
+						fmt.Fprintf(term,"=")
+					}
+					fmt.Fprintf(term,"]\n\r")
+					for y := 3; y < chanHeight; y += 1 {
+						fmt.Fprintf(term,"[")
+						for x := 3; x < chanWidth; x += 1 {
+						fmt.Fprintf(term,".")
+					}
+					fmt.Fprintf(term,"]\n\r")
+					}
+
+					fmt.Fprintf(term,"[")
+					for x := 3; x < chanWidth; x += 1 {
+						fmt.Fprintf(term,"=")
+					}
+					fmt.Fprintf(term,"]\n\r")
+
+				default:
+					fmt.Fprintf(term,"Uknown command: [%s]\n\r", line)
+				}
+				
 			}
 		}()
 	}
