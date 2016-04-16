@@ -24,8 +24,11 @@ func loginAuthFunc(c ssh.ConnMetadata, pass []byte) (*ssh.Permissions, error) {
 }
 
 type GameChan struct {
+	login   string
 	netChan ssh.Channel
 	req     <-chan *ssh.Request
+
+	chanWidth, chanHeight int
 }
 
 func starServer(hostaddr string) <-chan GameChan {
