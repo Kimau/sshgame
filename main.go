@@ -22,8 +22,12 @@ type GamePlayer struct {
 var playerMap map[string]*GamePlayer
 
 func main() {
-	playerMap = make(map[string]*GamePlayer)
+	data, _ := ioutil.ReadFile("gpolice.ans")
+	str := ansi.AnsFileToStr(data)
+	str = ansi.AnsFileTrim(str, 20, 9)
+	fmt.Println(str)
 
+	playerMap = make(map[string]*GamePlayer)
 	newConnChan := starServer("0.0.0.0:2022")
 
 	for {
