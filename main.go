@@ -24,8 +24,12 @@ var playerMap map[string]*GamePlayer
 func main() {
 	data, _ := ioutil.ReadFile("gpolice.ans")
 	str := ansi.AnsFileToStr(data)
-	str = ansi.AnsFileTrim(str, 20, 9)
 	fmt.Println(str)
+	fmt.Println("----------------------------------------------------------------")
+	trimStr, ans := ansi.AnsFileTrim(str, 20, 9)
+	fmt.Println("12345678901234567890")
+	fmt.Println(trimStr)
+	fmt.Println(ans)
 
 	playerMap = make(map[string]*GamePlayer)
 	newConnChan := starServer("0.0.0.0:2022")
@@ -121,7 +125,7 @@ func GameLoopForPlayer(term *terminal.Terminal, p *GamePlayer) {
 			x, _ := strconv.Atoi(words[1])
 			y, _ := strconv.Atoi(words[2])
 
-			str = ansi.AnsFileTrim(str, x, y)
+			_, str = ansi.AnsFileTrim(str, x, y)
 			fmt.Fprint(term, str)
 
 		case "br":

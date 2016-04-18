@@ -145,20 +145,52 @@ type attribStruct struct {
 	textOffset int
 }
 
-func AnsFileTrim(src string, xLimit int, yLimit int) string {
+func (at attribStruct) String() string {
+	return fmt.Sprintf("%d %x %x", at.textOffset, at.fgCol, at.bgCol)
+}
 
-	//skipForward := regexp.MustCompile("\xb1\\[([0-9]*)C")
-	//attrSet := regexp.MustCompile("\xb1\\[([0-9]*;*[0-9]*)m")
-	//
-	allescape := regexp.MustCompile("\\[([0-9\\;]*)[A-Za-z]")
+func (at attribStruct) ANSI() string {
+	res := "["
+	semi := false
+	if at.fgCol > 0 {
+		res += fmt.Sprintf("%d", at.fgCol)
+		semi = true
+	}
+	if at.bgCol > 0 {
+		if semi {
+			res += fmt.Sprintf(";%d", at.bgCol)
+		} else {
+			res += fmt.Sprintf("%d", at.bgCol)
+		}
+		semi = true
+	}
+
+	for i, v := range at.other {
+		if (i == 0) && !semi {
+			res += fmt.Sprintf(";%d", v)
+		} else {
+			res += fmt.Sprintf("%d", v)
+		}
+	}
+
+	res += "m"
+
+	return res
+}
+
+func attribStructSliceToString(atSlice ...attribStruct) string {
+	res := "["
+	for _, at := range atSlice {
+		res += fmt.Sprintf("%s, ", at)
+	}
+	return res + "]"
+}
+
+func RemoveCursorMovement(src string) string {
 	space := regexp.MustCompile("\\[([0-9]*)C")
-	attrib := regexp.MustCompile("\\[([0-9\\;]*)m")
-	notAttrib := regexp.MustCompile("\\[([0-9\\;]*)[^m]")
-	numBits := regexp.MustCompile("[0-9]+")
-	escBits := regexp.MustCompile("")
 
 	// Remove Cursor Movement
-	noCurString := space.ReplaceAllStringFunc(src, func(x string) string {
+	noForward := space.ReplaceAllStringFunc(src, func(x string) string {
 		f := space.FindStringSubmatch(x)
 		res := ""
 		for i, _ := strconv.Atoi(f[1]); i > 0; i -= 1 {
@@ -167,14 +199,46 @@ func AnsFileTrim(src string, xLimit int, yLimit int) string {
 		return res
 	})
 
-	noCurString = notAttrib.ReplaceAllString(noCurString, "")
+	// TODO :: Handle other cursor moves ABDH
+
+	return noForward
+}
+
+func AnsFileTrimHeight(src string, yLimit int) (txtRes string, ansRes string) {
+	noCurString := RemoveCursorMovement(src)
 
 	// Split into Lines and Trim
 	lines := strings.Split(noCurString, "\n")
-	if yLimit <= 0 {
-		yLimit = len(lines)
+	if yLimit > 0 {
+		lines = lines[0:yLimit]
 	}
-	lines = lines[0:yLimit]
+
+	allescape := regexp.MustCompile("\\[([0-9\\;]*)[^\\;0-9]")
+	txtRes = allescape.ReplaceAllString(strings.Join(lines, "\n\r"), "")
+	ansRes = txtRes
+
+	// Remove All other bits
+	return txtRes, ansRes
+}
+
+func AnsFileTrim(src string, xLimit int, yLimit int) (txtRes string, ansRes string) {
+	allescape := regexp.MustCompile("\\[([0-9\\;]*)[^\\;0-9]")
+	attrib := regexp.MustCompile("\\[([0-9\\;]*)m")
+	notAttrib := regexp.MustCompile("\\[([0-9\\;]*)[^m\\;0-9]")
+	numBits := regexp.MustCompile("[0-9]+")
+	escBits := regexp.MustCompile("")
+
+	// Remove Cursor Movement
+	noCurString := RemoveCursorMovement(src)
+
+	// Split into Lines and Trim
+	lines := strings.Split(noCurString, "\n")
+	if yLimit > 0 {
+		lines = lines[0:yLimit]
+	}
+
+	// Clear out anything not attrib
+	noCurString = notAttrib.ReplaceAllString(noCurString, "")
 
 	// Attrin
 	attribListIdx := make(map[int][]attribStruct)
@@ -183,11 +247,13 @@ func AnsFileTrim(src string, xLimit int, yLimit int) string {
 
 	for y, ln := range lines {
 
-		offset := 0
 		attribListIdx[y] = []attribStruct{}
 		if y > 0 && prevAttrib != nil {
-			offset = 1
 			attribListIdx[y] = []attribStruct{*prevAttrib}
+		}
+
+		if ln[0] != 0x1B {
+			ln = prevAttrib.ANSI() + ln
 		}
 
 		// Atrrib
@@ -208,7 +274,6 @@ func AnsFileTrim(src string, xLimit int, yLimit int) string {
 					switch attVal {
 					case 0:
 						attrb = attribStruct{}
-
 					case Bold, Faint, Italic, Underline, BlinkSlow, BlinkRapid, ReverseVideo, Concealed, CrossedOut:
 						attrb.other = append(attrb.other, attVal)
 					case FgBlack, FgRed, FgGreen, FgYellow, FgBlue, FgMagenta, FgCyan, FgWhite, FgHiBlack, FgHiRed, FgHiGreen, FgHiYellow, FgHiBlue, FgHiMagenta, FgHiCyan, FgHiWhite:
@@ -227,14 +292,41 @@ func AnsFileTrim(src string, xLimit int, yLimit int) string {
 		//
 		indexBits := escBits.FindAllStringIndex(textString, -1)
 		for i, v := range indexBits {
-			attribListIdx[y][i+offset].textOffset = v - i
+			attribListIdx[y][i].textOffset = v[0] - i
 		}
-		lines[y] = escBits.ReplaceAllString(textString, "")
+		textString = escBits.ReplaceAllString(textString, "")
 
+		if xLimit > 0 {
+			rArr := []rune(textString)
+			textString = string(rArr[:xLimit])
+		}
+
+		// Reinsert attribs
+		if true {
+			rArr := []rune(textString)
+			newLine := ""
+			prevPoint := 0
+
+			for i, at := range attribListIdx[y] {
+				off := at.textOffset
+				fmt.Println(i, prevPoint, off, xLimit, len(rArr))
+				if xLimit < 0 || off < xLimit {
+					newLine += string(rArr[prevPoint:off]) + at.ANSI()
+					prevPoint = off
+				} else {
+					break
+				}
+			}
+
+			textString = newLine + string(rArr[prevPoint:])
+		}
+
+		lines[y] = textString
 	}
 
-	textString := strings.Join(lines, Left(-xLimit)+Down(1))
+	txtRes = allescape.ReplaceAllString(strings.Join(lines, "\n\r"), "")
+	ansRes = strings.Join(lines, Left(xLimit)+Down(1))
 
 	// Remove All other bits
-	return textString
+	return txtRes, ansRes
 }
