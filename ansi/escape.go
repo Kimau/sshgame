@@ -150,31 +150,18 @@ func (at attribStruct) String() string {
 }
 
 func (at attribStruct) ANSI() string {
-	res := "["
-	semi := false
+	res := "\x1b["
+
 	if at.fgCol > 0 {
-		res += fmt.Sprintf("%d", at.fgCol)
-		semi = true
+		res += fmt.Sprintf("%d;", at.fgCol)
 	}
 	if at.bgCol > 0 {
-		if semi {
-			res += fmt.Sprintf(";%d", at.bgCol)
-		} else {
-			res += fmt.Sprintf("%d", at.bgCol)
-		}
-		semi = true
+		res += fmt.Sprintf("%d;", at.bgCol)
 	}
 
-	for i, v := range at.other {
-		if (i == 0) && !semi {
-			res += fmt.Sprintf(";%d", v)
-		} else {
-			res += fmt.Sprintf("%d", v)
-		}
-	}
+	//for i, v := range at.other {res += fmt.Sprintf("%d;", v)}
 
-	res += "m"
-
+	res = res[0:len(res)-1] + "m"
 	return res
 }
 
@@ -325,7 +312,7 @@ func AnsFileTrim(src string, xLimit int, yLimit int) (txtRes string, ansRes stri
 	}
 
 	txtRes = allescape.ReplaceAllString(strings.Join(lines, "\n\r"), "")
-	ansRes = strings.Join(lines, Left(xLimit)+Down(1))
+	ansRes = strings.Join(lines, Left(xLimit)+Down(1)) + Set()
 
 	// Remove All other bits
 	return txtRes, ansRes
