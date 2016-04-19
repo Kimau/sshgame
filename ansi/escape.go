@@ -245,9 +245,7 @@ func AnsFileTrim(src string, xLimit int, yLimit int) (txtRes string, ansRes stri
 			attribListIdx[y] = []attribStruct{*prevAttrib}
 		}
 
-		if ln[0] != 0x1B {
-			ln = prevAttrib.ANSI() + ln
-		}
+		// if ln[0] != 0x1B { ln = prevAttrib.ANSI() + ln }
 
 		// Atrrib
 		textString := attrib.ReplaceAllStringFunc(ln, func(x string) string {
@@ -271,7 +269,7 @@ func AnsFileTrim(src string, xLimit int, yLimit int) (txtRes string, ansRes stri
 
 			prevAttrib = &attrb
 			attribListIdx[y] = append(attribListIdx[y], attrb)
-			return ""
+			return "\x1b"
 		})
 
 		//
@@ -292,14 +290,15 @@ func AnsFileTrim(src string, xLimit int, yLimit int) (txtRes string, ansRes stri
 			newLine := ""
 			prevPoint := 0
 
+			// fmt.Println(textString)
 			for _, at := range attribListIdx[y] {
 				off := at.textOffset
-				// fmt.Println(i, prevPoint, off, xLimit, len(rArr))
-				if xLimit < 0 || off < xLimit {
-					newLine += string(rArr[prevPoint:off]) + "|" //at.ANSI()
-					prevPoint = off
+
+				if (xLimit < 0 || off < xLimit) && off >= prevPoint {
+						newLine += string(rArr[prevPoint:off]) + at.ANSI()
+						prevPoint = off
 				} else {
-					break
+					newLine += at.ANSI()
 				}
 			}
 
@@ -309,9 +308,4 @@ func AnsFileTrim(src string, xLimit int, yLimit int) (txtRes string, ansRes stri
 		lines[y] = textString
 	}
 
-	txtRes = allescape.ReplaceAllString(strings.Join(lines, "\n\r"), "")
-	ansRes = strings.Join(lines, Left(xLimit)+Down(1)) + Set()
-
-	// Remove All other bits
-	return txtRes, ansRes
-}
+	txtRes = allescape.ReplaceAllString(strings.Join(lines, "\n\r"), "
