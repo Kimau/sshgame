@@ -5,6 +5,7 @@ import (
 	"regexp"
 	"strconv"
 	"strings"
+	"sort"
 )
 
 type Attribute byte
@@ -30,9 +31,13 @@ func (at attribStruct) String() string {
 }
 
 func (at attribStruct) ANSI() string {
+	return at.atList.ANSI()
+}
+
+func (al AttributeList) ANSI() string {
 	res := "\x1b["
-	
-	for _, v := range at.atList {
+
+	for _, v := range al {
 		res += fmt.Sprintf("%d;", v)
 	}
 
@@ -40,11 +45,52 @@ func (at attribStruct) ANSI() string {
 	return res
 }
 
+// TODO :: MAke function to Chain Attribs
+
+func (al AttributeList) ColourConsildate() (fg Attribute, bg Attribute) {
+  isBold := false
+  fg = FgDefault
+  bg = BgDefault
+  sort.Sort(al)
+  
+  for _, v := range(al){
+    switch v {
+    case Reset: // Do Nothing we sorted list
+    case Bold:
+      isBold = true
+					case FgBlack, FgRed, FgGreen, FgYellow, FgBlue, FgMagenta, FgCyan, FgWhite:
+					if(isBold) {
+					  fg = v + (FgHiBlack - FgBlack)
+					} else {
+					  fg = v
+					}
+					case FgHiBlack, FgHiRed, FgHiGreen, FgHiYellow, FgHiBlue, FgHiMagenta, FgHiCyan, FgHiWhite:
+						fg = v
+					case BgBlack, BgRed, BgGreen, BgYellow, BgBlue, BgMagenta, BgCyan, BgWhite:
+					 if(isBold) {
+					  bg = v + (BgHiBlack - BgBlack)
+					} else {
+					  bg = v
+					}
+					case BgHiBlack, BgHiRed, BgHiGreen, BgHiYellow, BgHiBlue, BgHiMagenta, BgHiCyan, BgHiWhite:
+						bg = v
+						case FgDefault:
+						fg = v
+						case BgDefault:
+						bg = v
+    }
+  }
+	
+	al = AttributeList{fg,bg}
+	return fg,bg
+}
+
 const ESC = 27
 
 // Base attributes
 const (
-	Bold Attribute = iota + 1
+	Reset Attribute = iota + 0
+	Bold
 	Faint
 	Italic
 	Underline
@@ -56,6 +102,7 @@ const (
 )
 
 // Foreground text colors
+const FgDefault Attribute = 39
 const (
 	FgBlack Attribute = iota + 30
 	FgRed
@@ -80,6 +127,7 @@ const (
 )
 
 // Background text colors
+const BgDefault Attribute = 49
 const (
 	BgBlack Attribute = iota + 40
 	BgRed
@@ -135,8 +183,7 @@ func Set(vals ...Attribute) string {
 	case 2:
 		return fmt.Sprintf("\x1b[%d;%dm", vals[0], vals[1])
 	default:
-		return fmt.Sprintf("\x1b[%d;%dm", vals[0], vals[1])
-		// TODO :: Add support beyond 2
+		return (AttributeList(vals)).ANSI()
 	}
 
 }
@@ -293,8 +340,8 @@ func AnsFileTrim(src string, xLimit int, yLimit int) (txtRes string, ansRes stri
 				off := at.textOffset
 
 				if (xLimit < 0 || off < xLimit) && off >= prevPoint {
-						newLine += string(rArr[prevPoint:off]) + at.ANSI()
-						prevPoint = off
+					newLine += string(rArr[prevPoint:off]) + at.ANSI()
+					prevPoint = off
 				} else {
 					newLine += at.ANSI()
 				}
@@ -306,9 +353,8 @@ func AnsFileTrim(src string, xLimit int, yLimit int) (txtRes string, ansRes stri
 		lines[y] = textString
 	}
 
-
 	txtRes = allescape.ReplaceAllString(strings.Join(lines, "\n\r"), "")
-	ansRes = strings.Join(lines, "\n" + Left(xLimit)) + Set()
+	ansRes = strings.Join(lines, "\n"+Left(xLimit)) + Set()
 
 	// Remove All other bits
 	return txtRes, ansRes
