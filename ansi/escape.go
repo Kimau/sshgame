@@ -3,7 +3,6 @@ package ansi
 import (
 	"fmt"
 	"regexp"
-	"sort"
 	"strconv"
 	"strings"
 )
@@ -32,8 +31,7 @@ func (at attribStruct) String() string {
 
 func (at attribStruct) ANSI() string {
 	res := "\x1b["
-	sort.Sort(at.atList)
-
+	
 	for _, v := range at.atList {
 		res += fmt.Sprintf("%d;", v)
 	}
@@ -308,4 +306,10 @@ func AnsFileTrim(src string, xLimit int, yLimit int) (txtRes string, ansRes stri
 		lines[y] = textString
 	}
 
-	txtRes = allescape.ReplaceAllString(strings.Join(lines, "\n\r"), "
+
+	txtRes = allescape.ReplaceAllString(strings.Join(lines, "\n\r"), "")
+	ansRes = strings.Join(lines, "\n" + Left(xLimit)) + Set()
+
+	// Remove All other bits
+	return txtRes, ansRes
+}
