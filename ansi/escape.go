@@ -3,11 +3,44 @@ package ansi
 import (
 	"fmt"
 	"regexp"
+	"sort"
 	"strconv"
 	"strings"
 )
 
 type Attribute byte
+type AttributeList []Attribute
+
+func (al AttributeList) Len() int           { return len(al) }
+func (al AttributeList) Swap(i, j int)      { al[i], al[j] = al[j], al[i] }
+func (al AttributeList) Less(i, j int) bool { return al[i] < al[j] }
+
+type attribStruct struct {
+	atList     AttributeList
+	textOffset int
+}
+
+func (at attribStruct) String() string {
+	res := fmt.Sprintf("%d", at.textOffset)
+
+	for _, v := range at.atList {
+		res += fmt.Sprintf("%d;", v)
+	}
+
+	return res
+}
+
+func (at attribStruct) ANSI() string {
+	res := "\x1b["
+	sort.Sort(at.atList)
+
+	for _, v := range at.atList {
+		res += fmt.Sprintf("%d;", v)
+	}
+
+	res = res[0:len(res)-1] + "m"
+	return res
+}
 
 const ESC = 27
 
@@ -138,33 +171,6 @@ func AnsFileToStr(data []byte) string {
 	return bigStr
 }
 
-type attribStruct struct {
-	fgCol      Attribute
-	bgCol      Attribute
-	other      []Attribute
-	textOffset int
-}
-
-func (at attribStruct) String() string {
-	return fmt.Sprintf("%d %x %x", at.textOffset, at.fgCol, at.bgCol)
-}
-
-func (at attribStruct) ANSI() string {
-	res := "\x1b["
-
-	if at.fgCol > 0 {
-		res += fmt.Sprintf("%d;", at.fgCol)
-	}
-	if at.bgCol > 0 {
-		res += fmt.Sprintf("%d;", at.bgCol)
-	}
-
-	//for i, v := range at.other {res += fmt.Sprintf("%d;", v)}
-
-	res = res[0:len(res)-1] + "m"
-	return res
-}
-
 func attribStructSliceToString(atSlice ...attribStruct) string {
 	res := "["
 	for _, at := range atSlice {
@@ -247,9 +253,10 @@ func AnsFileTrim(src string, xLimit int, yLimit int) (txtRes string, ansRes stri
 		textString := attrib.ReplaceAllStringFunc(ln, func(x string) string {
 			f := numBits.FindAllStringSubmatch(x, -1)
 			attrb := attribStruct{}
-			if prevAttrib != nil {
-				attrb = *prevAttrib
-			}
+			/*
+				if prevAttrib != nil {
+					attrb = *prevAttrib
+				}*/
 
 			for _, a := range f {
 				intVal, e := strconv.Atoi(a[0])
@@ -258,16 +265,7 @@ func AnsFileTrim(src string, xLimit int, yLimit int) (txtRes string, ansRes stri
 					fmt.Println(e)
 				} else {
 					attVal := Attribute(intVal)
-					switch attVal {
-					case 0:
-						attrb = attribStruct{}
-					case Bold, Faint, Italic, Underline, BlinkSlow, BlinkRapid, ReverseVideo, Concealed, CrossedOut:
-						attrb.other = append(attrb.other, attVal)
-					case FgBlack, FgRed, FgGreen, FgYellow, FgBlue, FgMagenta, FgCyan, FgWhite, FgHiBlack, FgHiRed, FgHiGreen, FgHiYellow, FgHiBlue, FgHiMagenta, FgHiCyan, FgHiWhite:
-						attrb.fgCol = attVal
-					case BgBlack, BgRed, BgGreen, BgYellow, BgBlue, BgMagenta, BgCyan, BgWhite, BgHiBlack, BgHiRed, BgHiGreen, BgHiYellow, BgHiBlue, BgHiMagenta, BgHiCyan, BgHiWhite:
-						attrb.bgCol = attVal
-					}
+					attrb.atList = append(attrb.atList, attVal)
 				}
 			}
 
@@ -294,11 +292,11 @@ func AnsFileTrim(src string, xLimit int, yLimit int) (txtRes string, ansRes stri
 			newLine := ""
 			prevPoint := 0
 
-			for i, at := range attribListIdx[y] {
+			for _, at := range attribListIdx[y] {
 				off := at.textOffset
-				fmt.Println(i, prevPoint, off, xLimit, len(rArr))
+				// fmt.Println(i, prevPoint, off, xLimit, len(rArr))
 				if xLimit < 0 || off < xLimit {
-					newLine += string(rArr[prevPoint:off]) + at.ANSI()
+					newLine += string(rArr[prevPoint:off]) + "|" //at.ANSI()
 					prevPoint = off
 				} else {
 					break
