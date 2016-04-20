@@ -6,6 +6,7 @@ import (
 	"sort"
 	"strconv"
 	"strings"
+	"unicode"
 )
 
 type Attribute byte
@@ -283,8 +284,7 @@ func AnsFileTrim(src string, xLimit int, yLimit int) (txtRes string, ansRes stri
 	attrib := regexp.MustCompile("\\[([0-9\\;]*)m")
 	notAttrib := regexp.MustCompile("\\[([0-9\\;]*)[^m\\;0-9]")
 	numBits := regexp.MustCompile("[0-9]+")
-	escBits := regexp.MustCompile("")
-
+	
 	// Remove Cursor Movement
 	noCurString := RemoveCursorMovement(src)
 
@@ -297,28 +297,36 @@ func AnsFileTrim(src string, xLimit int, yLimit int) (txtRes string, ansRes stri
 	// Clear out anything not attrib
 	noCurString = notAttrib.ReplaceAllString(noCurString, "")
 
-	// Attrin
-	attribListIdx := make(map[int][]attribStruct)
-	var prevAttrib *attribStruct
-	prevAttrib = nil
-
+	// Per Line
 	for y, ln := range lines {
 
-		attribListIdx[y] = []attribStruct{}
-		if y > 0 && prevAttrib != nil {
-			attribListIdx[y] = []attribStruct{*prevAttrib}
+		// Trim Characters from Line
+		rArr := []rune(ln)
+		filterArr := []rune{}
+		inEscape := false
+		counter := 0
+		for _, c := range rArr {
+			if inEscape {
+				filterArr = append(filterArr, c)
+				if unicode.IsLetter(c) {
+					inEscape = false
+				}
+			} else if c == 0x1b {
+				filterArr = append(filterArr, c)
+				inEscape = true
+			} else if counter < 0 || counter < xLimit {
+				filterArr = append(filterArr, c)
+				counter += 1
+			}
 		}
-
-		// if ln[0] != 0x1B { ln = prevAttrib.ANSI() + ln }
+		textString := string(filterArr)
 
 		// Atrrib
-		textString := attrib.ReplaceAllStringFunc(ln, func(x string) string {
+		fg := FgDefault
+		bg := BgDefault
+		textString = attrib.ReplaceAllStringFunc(textString, func(x string) string {
 			f := numBits.FindAllStringSubmatch(x, -1)
-			attrb := attribStruct{}
-			/*
-				if prevAttrib != nil {
-					attrb = *prevAttrib
-				}*/
+			var atList AttributeList
 
 			for _, a := range f {
 				intVal, e := strconv.Atoi(a[0])
@@ -327,72 +335,20 @@ func AnsFileTrim(src string, xLimit int, yLimit int) (txtRes string, ansRes stri
 					fmt.Println(e)
 				} else {
 					attVal := Attribute(intVal)
-					attrb.atList = append(attrb.atList, attVal)
+					atList = append(atList, attVal)
 				}
 			}
 
-			prevAttrib = &attrb
-			attribListIdx[y] = append(attribListIdx[y], attrb)
-			return "\x1b"
+			fg, bg = atList.ColourConsildate(fg, bg)
+			return atList.ANSI()
 		})
 
-		//
-		indexBits := escBits.FindAllStringIndex(textString, -1)
-		for i, v := range indexBits {
-			attribListIdx[y][i].textOffset = v[0] - i
-		}
-		textString = escBits.ReplaceAllString(textString, "")
 
-		if xLimit > 0 {
-			rArr := []rune(textString)
-			textString = string(rArr[:xLimit])
-		}
-
-		// Reinsert attribs
-		if true {
-			rArr := []rune(textString)
-			newLine := ""
-			prevPoint := 0
-
-			fg := FgDefault
-			bg := BgDefault
-
-			points := "   \t"
-
-			// fmt.Println(textString)
-			for _, at := range attribListIdx[y] {
-				off := at.textOffset
-				fg, bg = at.atList.ColourConsildate(fg, bg)
-				fmt.Println(fg, bg)
-				at.atList = []Attribute{fg, bg}
-
-				if (xLimit < 0 || off < xLimit) && off >= prevPoint {
-					newLine += string(rArr[prevPoint:off]) + at.ANSI() + "|"
-					prevPoint = off
-				} else {
-					if prevPoint < len(rArr) {
-						newLine += string(rArr[prevPoint:])
-						prevPoint = len(rArr)
-					}
-					newLine += at.ANSI() + "+"
-				}
-
-				points += fmt.Sprintf("%d ", off)
-			}
-
-			if prevPoint < len(rArr) {
-				newLine += string(rArr[prevPoint:])
-			}
-
-			textString = newLine + points
-		}
-
-		lines[y] = ">" + textString
+		lines[y] = textString
 	}
 
 	txtRes = allescape.ReplaceAllString(strings.Join(lines, "\n\r"), "")
 	ansRes = strings.Join(lines, "\n"+Left(xLimit)) + Set()
-
-	// Remove All other bits
+	
 	return txtRes, ansRes
 }
