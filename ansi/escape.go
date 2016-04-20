@@ -3,9 +3,9 @@ package ansi
 import (
 	"fmt"
 	"regexp"
+	"sort"
 	"strconv"
 	"strings"
-	"sort"
 )
 
 type Attribute byte
@@ -45,44 +45,63 @@ func (al AttributeList) ANSI() string {
 	return res
 }
 
-// TODO :: MAke function to Chain Attribs
+func (al AttributeList) ColourConsildate(prevAtList ...Attribute) (fg Attribute, bg Attribute) {
+	isBold := false
+	fg = FgDefault
+	bg = BgDefault
+	sort.Sort(al)
 
-func (al AttributeList) ColourConsildate() (fg Attribute, bg Attribute) {
-  isBold := false
-  fg = FgDefault
-  bg = BgDefault
-  sort.Sort(al)
-  
-  for _, v := range(al){
-    switch v {
-    case Reset: // Do Nothing we sorted list
-    case Bold:
-      isBold = true
-					case FgBlack, FgRed, FgGreen, FgYellow, FgBlue, FgMagenta, FgCyan, FgWhite:
-					if(isBold) {
-					  fg = v + (FgHiBlack - FgBlack)
-					} else {
-					  fg = v
-					}
-					case FgHiBlack, FgHiRed, FgHiGreen, FgHiYellow, FgHiBlue, FgHiMagenta, FgHiCyan, FgHiWhite:
-						fg = v
-					case BgBlack, BgRed, BgGreen, BgYellow, BgBlue, BgMagenta, BgCyan, BgWhite:
-					 if(isBold) {
-					  bg = v + (BgHiBlack - BgBlack)
-					} else {
-					  bg = v
-					}
-					case BgHiBlack, BgHiRed, BgHiGreen, BgHiYellow, BgHiBlue, BgHiMagenta, BgHiCyan, BgHiWhite:
-						bg = v
-						case FgDefault:
-						fg = v
-						case BgDefault:
-						bg = v
-    }
-  }
-	
-	al = AttributeList{fg,bg}
-	return fg,bg
+	for _, v := range prevAtList {
+		switch v {
+		case Reset: // Do Nothing we sorted list
+		case Bold:
+			isBold = true
+		case FgBlack, FgRed, FgGreen, FgYellow, FgBlue, FgMagenta, FgCyan, FgWhite:
+			fg = v
+
+		case FgHiBlack, FgHiRed, FgHiGreen, FgHiYellow, FgHiBlue, FgHiMagenta, FgHiCyan, FgHiWhite:
+			isBold = true
+			fg = v
+
+		case BgBlack, BgRed, BgGreen, BgYellow, BgBlue, BgMagenta, BgCyan, BgWhite:
+			bg = v
+
+		case BgHiBlack, BgHiRed, BgHiGreen, BgHiYellow, BgHiBlue, BgHiMagenta, BgHiCyan, BgHiWhite:
+			isBold = true
+			bg = v
+		}
+	}
+
+	for _, v := range al {
+		switch v {
+		case Reset: // Do Nothing we sorted list
+		case Bold:
+			isBold = true
+		case FgBlack, FgRed, FgGreen, FgYellow, FgBlue, FgMagenta, FgCyan, FgWhite:
+			if isBold {
+				fg = v + (FgHiBlack - FgBlack)
+			} else {
+				fg = v
+			}
+		case FgHiBlack, FgHiRed, FgHiGreen, FgHiYellow, FgHiBlue, FgHiMagenta, FgHiCyan, FgHiWhite:
+			fg = v
+		case BgBlack, BgRed, BgGreen, BgYellow, BgBlue, BgMagenta, BgCyan, BgWhite:
+			if isBold {
+				bg = v + (BgHiBlack - BgBlack)
+			} else {
+				bg = v
+			}
+		case BgHiBlack, BgHiRed, BgHiGreen, BgHiYellow, BgHiBlue, BgHiMagenta, BgHiCyan, BgHiWhite:
+			bg = v
+		case FgDefault:
+			fg = v
+		case BgDefault:
+			bg = v
+		}
+	}
+
+	al = AttributeList{fg, bg}
+	return fg, bg
 }
 
 const ESC = 27
@@ -335,22 +354,40 @@ func AnsFileTrim(src string, xLimit int, yLimit int) (txtRes string, ansRes stri
 			newLine := ""
 			prevPoint := 0
 
+			fg := FgDefault
+			bg := BgDefault
+
+			points := "   \t"
+
 			// fmt.Println(textString)
 			for _, at := range attribListIdx[y] {
 				off := at.textOffset
+				fg, bg = at.atList.ColourConsildate(fg, bg)
+				fmt.Println(fg, bg)
+				at.atList = []Attribute{fg, bg}
 
 				if (xLimit < 0 || off < xLimit) && off >= prevPoint {
-					newLine += string(rArr[prevPoint:off]) + at.ANSI()
+					newLine += string(rArr[prevPoint:off]) + at.ANSI() + "|"
 					prevPoint = off
 				} else {
-					newLine += at.ANSI()
+					if prevPoint < len(rArr) {
+						newLine += string(rArr[prevPoint:])
+						prevPoint = len(rArr)
+					}
+					newLine += at.ANSI() + "+"
 				}
+
+				points += fmt.Sprintf("%d ", off)
 			}
 
-			textString = newLine + string(rArr[prevPoint:])
+			if prevPoint < len(rArr) {
+				newLine += string(rArr[prevPoint:])
+			}
+
+			textString = newLine + points
 		}
 
-		lines[y] = textString
+		lines[y] = ">" + textString
 	}
 
 	txtRes = allescape.ReplaceAllString(strings.Join(lines, "\n\r"), "")
