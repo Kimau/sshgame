@@ -118,6 +118,18 @@ func GameLoopForPlayer(term *terminal.Terminal, p *GamePlayer) {
 			str := ansi.AnsFileToStr(data)
 			fmt.Fprint(term, str)
 
+		case "box":
+			data, _ := ioutil.ReadFile("gpolice.ans")
+			str := ansi.AnsFileToStr(data)
+
+			x1, _ := strconv.Atoi(words[1])
+			x2, _ := strconv.Atoi(words[2])
+
+			y1, _ := strconv.Atoi(words[3])
+			y2, _ := strconv.Atoi(words[4])
+
+			fmt.Fprint(term, "\x1b[20C"+ansi.AnsFileBoxTrim(str, x1, x2, y1, y2))
+
 		case "test":
 			data, _ := ioutil.ReadFile("gpolice.ans")
 			str := ansi.AnsFileToStr(data)
