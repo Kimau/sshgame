@@ -279,12 +279,16 @@ func AnsFileTrimHeight(src string, yLimit int) (txtRes string, ansRes string) {
 	return txtRes, ansRes
 }
 
-func AnsFileTrim(src string, xLimit int, yLimit int) (txtRes string, ansRes string) {
+func StripANSI(src string) string {
 	allescape := regexp.MustCompile("\\[([0-9\\;]*)[^\\;0-9]")
+	return allescape.ReplaceAllString(src, "")
+}
+
+func AnsFileTrim(src string, xLimit int, yLimit int) string {
 	attrib := regexp.MustCompile("\\[([0-9\\;]*)m")
 	notAttrib := regexp.MustCompile("\\[([0-9\\;]*)[^m\\;0-9]")
 	numBits := regexp.MustCompile("[0-9]+")
-	
+
 	// Remove Cursor Movement
 	noCurString := RemoveCursorMovement(src)
 
@@ -343,12 +347,98 @@ func AnsFileTrim(src string, xLimit int, yLimit int) (txtRes string, ansRes stri
 			return atList.ANSI()
 		})
 
+		lines[y] = textString
+	}
+
+	ansRes := strings.Join(lines, "\n"+Left(xLimit)) + Set()
+	return ansRes
+}
+
+func AnsFileBoxTrim(src string, xMin int, xMax int, yMin int, yMax int) string {
+	attrib := regexp.MustCompile("\\[([0-9\\;]*)m")
+	notAttrib := regexp.MustCompile("\\[([0-9\\;]*)[^m\\;0-9]")
+	numBits := regexp.MustCompile("[0-9]+")
+
+	// Remove Cursor Movement
+	noCurString := RemoveCursorMovement(src)
+
+	// Split into Lines and Trim
+	lines := strings.Split(noCurString, "\n")
+
+	// Bounds Check
+	if xMin < 0 {
+		xMin = 0
+	}
+	if yMin < 0 {
+		yMin = 0
+	}
+	if xMax <= xMin {
+		xMax = xMin + 1
+	}
+
+	if yMax > len(lines) {
+		yMax = len(lines)
+	}
+	if yMax <= yMin {
+		yMax = yMin + 1
+	}
+
+	lines = lines[yMin:yMax]
+
+	// Clear out anything not attrib
+	noCurString = notAttrib.ReplaceAllString(noCurString, "")
+
+	// Per Line
+	for y, ln := range lines {
+
+		// Trim Characters from Line
+		rArr := []rune(ln)
+		filterArr := []rune{}
+		inEscape := false
+		counter := 0
+		for _, c := range rArr {
+			if inEscape {
+				filterArr = append(filterArr, c)
+				if unicode.IsLetter(c) {
+					inEscape = false
+				}
+			} else if c == 0x1b {
+				filterArr = append(filterArr, c)
+				inEscape = true
+			} else {
+				counter += 1
+				if counter >= xMin && counter < xMax {
+					filterArr = append(filterArr, c)
+				}
+			}
+		}
+		textString := string(filterArr)
+
+		// Atrrib
+		fg := FgDefault
+		bg := BgDefault
+		textString = attrib.ReplaceAllStringFunc(textString, func(x string) string {
+			f := numBits.FindAllStringSubmatch(x, -1)
+			var atList AttributeList
+
+			for _, a := range f {
+				intVal, e := strconv.Atoi(a[0])
+
+				if e != nil {
+					fmt.Println(e)
+				} else {
+					attVal := Attribute(intVal)
+					atList = append(atList, attVal)
+				}
+			}
+
+			fg, bg = atList.ColourConsildate(fg, bg)
+			return atList.ANSI()
+		})
 
 		lines[y] = textString
 	}
 
-	txtRes = allescape.ReplaceAllString(strings.Join(lines, "\n\r"), "")
-	ansRes = strings.Join(lines, "\n"+Left(xLimit)) + Set()
-	
-	return txtRes, ansRes
+	ansRes := strings.Join(lines, "\n"+Left(xMax-xMin)) + Set()
+	return ansRes
 }

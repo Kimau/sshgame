@@ -26,10 +26,10 @@ func main() {
 	str := ansi.AnsFileToStr(data)
 	fmt.Println(str)
 	fmt.Println("----------------------------------------------------------------")
-	trimStr, ans := ansi.AnsFileTrim(str, 20, 9)
 	fmt.Println("12345678901234567890")
-	fmt.Println(trimStr)
-	fmt.Println(ans)
+	fmt.Println(ansi.AnsFileTrim(str, 20, 9))
+	fmt.Println("----------------------------------------------------------------")
+	fmt.Println("\x1b[20C" + ansi.AnsFileBoxTrim(str, 20, 40, 9, 100))
 
 	playerMap = make(map[string]*GamePlayer)
 	newConnChan := starServer("0.0.0.0:2022")
@@ -125,8 +125,7 @@ func GameLoopForPlayer(term *terminal.Terminal, p *GamePlayer) {
 			x, _ := strconv.Atoi(words[1])
 			y, _ := strconv.Atoi(words[2])
 
-			_, str = ansi.AnsFileTrim(str, x, y)
-			fmt.Fprint(term, str)
+			fmt.Fprint(term, ansi.AnsFileTrim(str, x, y))
 
 		case "br":
 			fmt.Fprintf(term, "%s%sX", ansi.CLEAR_SCREEN, ansi.Pos(p.currChand.chanWidth, p.currChand.chanHeight))
