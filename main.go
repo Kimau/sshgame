@@ -29,7 +29,7 @@ func main() {
 	fmt.Println("12345678901234567890")
 	fmt.Println(ansi.AnsFileTrim(str, 20, 9))
 	fmt.Println("----------------------------------------------------------------")
-	fmt.Println("\x1b[20C" + ansi.AnsFileBoxTrim(str, 20, 40, 9, 100))
+	fmt.Println("\x1b[20C" + ansi.AnsFileBoxTrim(str, 20, 40, 9, 100) + "\n" + ansi.AnsFileBoxTrim(str, 40, 80, 6, 100))
 
 	playerMap = make(map[string]*GamePlayer)
 	newConnChan := starServer("0.0.0.0:2022")
@@ -128,7 +128,9 @@ func GameLoopForPlayer(term *terminal.Terminal, p *GamePlayer) {
 			y1, _ := strconv.Atoi(words[3])
 			y2, _ := strconv.Atoi(words[4])
 
-			fmt.Fprint(term, "\x1b[20C"+ansi.AnsFileBoxTrim(str, x1, x2, y1, y2))
+			fmt.Fprint(term, ansi.AnsFileBoxTrim(str, 0, x1, 0, y1)+"\n"+
+				ansi.AnsFileBoxTrim(str, x1, x2, y1, y2)+"\n"+
+				ansi.AnsFileBoxTrim(str, x2, 1000, y2, 1000)+"\n")
 
 		case "test":
 			data, _ := ioutil.ReadFile("gpolice.ans")
