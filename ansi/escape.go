@@ -106,6 +106,7 @@ func (al AttributeList) ColourConsildate(prevAtList ...Attribute) (fg Attribute,
 }
 
 const ESC = 27
+const VERTTAB = 11
 
 // Base attributes
 const (
@@ -262,23 +263,6 @@ func RemoveCursorMovement(src string) string {
 	return noForward
 }
 
-func AnsFileTrimHeight(src string, yLimit int) (txtRes string, ansRes string) {
-	noCurString := RemoveCursorMovement(src)
-
-	// Split into Lines and Trim
-	lines := strings.Split(noCurString, "\n")
-	if yLimit > 0 {
-		lines = lines[0:yLimit]
-	}
-
-	allescape := regexp.MustCompile("\\[([0-9\\;]*)[^\\;0-9]")
-	txtRes = allescape.ReplaceAllString(strings.Join(lines, "\n\r"), "")
-	ansRes = txtRes
-
-	// Remove All other bits
-	return txtRes, ansRes
-}
-
 func StripANSI(src string) string {
 	allescape := regexp.MustCompile("\\[([0-9\\;]*)[^\\;0-9]")
 	return allescape.ReplaceAllString(src, "")
@@ -350,11 +334,21 @@ func AnsFileTrim(src string, xLimit int, yLimit int) string {
 		lines[y] = textString
 	}
 
-	ansRes := strings.Join(lines, "\n"+Left(xLimit)) + Set()
+	ansRes := strings.Join(lines, "\x0B"+Left(xLimit)) + Set()
 	return ansRes
 }
 
-func AnsFileBoxTrim(src string, xMin int, xMax int, yMin int, yMax int) string {
+func Clamp(a int, min int, max int) int {
+	if a <= min {
+		return min
+	}
+	if a >= max {
+		return max
+	}
+	return a
+}
+
+func AnsFileBoxTrim(src string, xMin int, yMin int, xMax int, yMax int) string {
 	attrib := regexp.MustCompile("\\[([0-9\\;]*)m")
 	notAttrib := regexp.MustCompile("\\[([0-9\\;]*)[^m\\;0-9]")
 	numBits := regexp.MustCompile("[0-9]+")
@@ -366,24 +360,21 @@ func AnsFileBoxTrim(src string, xMin int, xMax int, yMin int, yMax int) string {
 	lines := strings.Split(noCurString, "\n")
 
 	// Bounds Check
-	if xMin < 0 {
-		xMin = 0
+	if yMin == yMax {
+		yMax += 1
 	}
-	if yMin < 0 {
-		yMin = 0
-	}
-	if xMax <= xMin {
-		xMax = xMin + 1
-	}
+	xMin = Clamp(xMin, 0, xMax)
+	xMax = Clamp(xMax, xMin, 180)
+	yMin = Clamp(yMin, 0, len(lines)-1)
+	yMax = Clamp(yMax, yMin, len(lines)-1)
 
-	if yMax > len(lines) {
-		yMax = len(lines)
-	}
-	if yMax <= yMin {
-		yMax = yMin + 1
-	}
+	print("[", xMin, ":", yMin, " - ", xMax, ":", yMax, "]")
 
-	lines = lines[yMin:yMax]
+	if yMin == yMax {
+		lines = []string{}
+	} else {
+		lines = lines[yMin:yMax]
+	}
 
 	// Clear out anything not attrib
 	noCurString = notAttrib.ReplaceAllString(noCurString, "")
@@ -439,6 +430,6 @@ func AnsFileBoxTrim(src string, xMin int, xMax int, yMin int, yMax int) string {
 		lines[y] = textString
 	}
 
-	ansRes := strings.Join(lines, "\n"+Left(xMax-xMin)) + Set()
+	ansRes := strings.Join(lines, "\x0B"+Left(xMax-xMin)) + Set()
 	return ansRes
 }

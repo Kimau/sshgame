@@ -123,14 +123,13 @@ func GameLoopForPlayer(term *terminal.Terminal, p *GamePlayer) {
 			str := ansi.AnsFileToStr(data)
 
 			x1, _ := strconv.Atoi(words[1])
-			x2, _ := strconv.Atoi(words[2])
-
-			y1, _ := strconv.Atoi(words[3])
+			y1, _ := strconv.Atoi(words[2])
+			x2, _ := strconv.Atoi(words[3])
 			y2, _ := strconv.Atoi(words[4])
 
-			fmt.Fprint(term, ansi.AnsFileBoxTrim(str, 0, x1, 0, y1)+"\n"+
-				ansi.AnsFileBoxTrim(str, x1, x2, y1, y2)+"\n"+
-				ansi.AnsFileBoxTrim(str, x2, 1000, y2, 1000)+"\n")
+			x := ansi.AnsFileBoxTrim(str, x1, y1, x2, y2)
+			fmt.Println(x, x1, y1, x2, y2)
+			fmt.Fprint(term, "        "+x)
 
 		case "test":
 			data, _ := ioutil.ReadFile("gpolice.ans")
