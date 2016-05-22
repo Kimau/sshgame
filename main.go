@@ -142,19 +142,19 @@ func GameLoopForPlayer(term *terminal.Terminal, p *GamePlayer) {
 			fmt.Fprint(term, ansi.AnsFileTrim(str, x, y))
 
 		case "br":
-			fmt.Fprintf(term, "%s%sX", ansi.CLEAR_SCREEN, ansi.Pos(p.currChand.chanWidth, p.currChand.chanHeight))
+			fmt.Fprintf(term, "%s%sX", ansi.CLEAR_SCREEN, ansi.CurPos(p.currChand.chanWidth, p.currChand.chanHeight))
 
 		case "clear":
 			fmt.Fprintf(term, "%s%s", ansi.CLEAR_SCREEN, ansi.GOTO_TL)
 
 		case "border":
-			fmt.Fprint(term, ansi.CLEAR_SCREEN+ansi.Set(ansi.FgBlack, ansi.BgWhite)+ansi.GOTO_TL+ansi.CLEAR_LINE+ansi.Pos(p.currChand.chanWidth, p.currChand.chanHeight-1)+ansi.CLEAR_LINE)
+			fmt.Fprint(term, ansi.CLEAR_SCREEN+ansi.Set(ansi.FgBlack, ansi.BgWhite)+ansi.GOTO_TL+ansi.CLEAR_LINE+ansi.CurPos(p.currChand.chanWidth, p.currChand.chanHeight-1)+ansi.CLEAR_LINE)
 
 			for y := 1; y < p.currChand.chanHeight; y += 1 {
-				fmt.Fprintf(term, ansi.Pos(p.currChand.chanWidth, y)+"  ")
+				fmt.Fprintf(term, ansi.CurPos(p.currChand.chanWidth, y)+"  ")
 			}
 
-			fmt.Fprint(term, ansi.Set()+ansi.Pos(1, p.currChand.chanHeight))
+			fmt.Fprint(term, ansi.Set()+ansi.CurPos(1, p.currChand.chanHeight))
 
 		default:
 			fmt.Fprintf(term, "Uknown command: [%s]\n\r", line)
