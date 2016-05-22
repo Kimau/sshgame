@@ -29,7 +29,8 @@ func main() {
 	fmt.Println("12345678901234567890")
 	fmt.Println(ansi.AnsFileTrim(str, 20, 9))
 	fmt.Println("----------------------------------------------------------------")
-	fmt.Println("\x1b[20C" + ansi.AnsFileBoxTrim(str, 20, 40, 9, 100) + "\n" + ansi.AnsFileBoxTrim(str, 40, 80, 6, 100))
+	fmt.Println([]rune(ansi.AnsFileBoxTrim(str, 1, 1, 5, 5)))
+	fmt.Println([]rune(ansi.AnsFileBoxTrim(str, 0, 0, 5, 5)))
 
 	playerMap = make(map[string]*GamePlayer)
 	newConnChan := starServer("0.0.0.0:2022")

@@ -368,7 +368,7 @@ func AnsFileBoxTrim(src string, xMin int, yMin int, xMax int, yMax int) string {
 	yMin = Clamp(yMin, 0, len(lines)-1)
 	yMax = Clamp(yMax, yMin, len(lines)-1)
 
-	print("[", xMin, ":", yMin, " - ", xMax, ":", yMax, "]")
+	// sprint("[", xMin, ":", yMin, " - ", xMax, ":", yMax, "]")
 
 	if yMin == yMax {
 		lines = []string{}
