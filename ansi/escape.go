@@ -139,7 +139,7 @@ func AnsFileBoxTrim(src string, xMin int, yMin int, xMax int, yMax int) string {
 	}
 
 	// Setup Screen
-	ansRes := CSAVE + CurScrollUp(yMax-yMin) + CLOAD
+	ansRes := CurNewLinePad(yMax - yMin)
 	ansRes += strings.Join(lines, CDOWN+CurLeft(xMax-xMin)) + Set()
 
 	return ansRes

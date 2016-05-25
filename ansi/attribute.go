@@ -94,6 +94,14 @@ func CurPos(x, y int) string     { return fmt.Sprintf("\x1b[%d;%dH", y, x) }
 func CurHor(x int) string        { return fmt.Sprintf("\x1b[%dG", x) }
 func CurScrollUp(c int) string   { return fmt.Sprintf("\x1b[%dS", c) }
 func CurScrollDown(c int) string { return fmt.Sprintf("\x1b[%dT", c) }
+func CurNewLinePad(c int) string {
+	t := CSAVE
+	for i := 0; i < c; i += 1 {
+		t += "\n"
+	}
+	t += CLOAD
+	return t
+}
 
 const CSAVE = "\x1b[s"
 const CLOAD = "\x1b[u"
