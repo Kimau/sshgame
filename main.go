@@ -8,7 +8,7 @@ import (
 
 	"golang.org/x/crypto/ssh/terminal"
 
-	"./ansi"
+	"sshgame/ansi"
 )
 
 type GamePlayer struct {
